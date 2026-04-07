@@ -1,5 +1,4 @@
-import Distribution.Simple.Setup (falseArg)
--- module Lab1 where
+import Data.Char (isLower, isUpper, toLower, toUpper, isLetter)
 
 -- (+) ::   Num a => a -> a -> a
 -- (-) ::   Num a => a -> a -> a
@@ -125,9 +124,71 @@ reverseMy (x:xs) = reverse xs  ++ [x]
 -- есть ли элемент
 elemMy _ [] = False
 elemMy y (x:xs) 
-                | y == x = True
-                | otherwise = elemMy y xs
+        | y == x = True
+        | otherwise = elemMy y xs
         
 -- n копий элемента
 replicateMy a 1 = [a]
 replicateMy a n = a : replicateMy a (n - 1) 
+
+lookupMy :: Eq a => a -> b -> [(a, b)] -> b
+lookupMy _ def [] = def
+lookupMy key def ((first, second):xs) 
+        | key == first = second
+        | otherwise = lookupMy key def xs
+
+substrMy :: [a] -> Int -> Int -> [a]
+substrMy xs a b = take (b - a) (drop a xs)
+
+strReplaceMy :: Eq a => [a] -> [a] -> [a] -> [a]
+
+strReplaceMy old new xs
+        | length old == 0 = xs
+        | otherwise = replace xs
+        where
+                lenOld = length old
+                replace [] = []
+                replace ys
+                        | take lenOld ys == old = new ++ replace (drop lenOld ys)
+                        | otherwise = head ys : replace (tail ys)
+                        
+elemIndicesMy :: Eq a => a -> [a] -> [Int]
+elemIndicesMy elem xs = go xs 0
+        where
+                go [] _ = []
+                go (y:ys) i
+                        | elem == y = i : go ys (i + 1)
+                        | otherwise = go ys (i + 1)
+
+strPosMy :: Eq a => [a] -> [a] -> [Int]
+strPosMy sub xs = go xs 0
+        where
+                lenSub = length sub
+                go [] _ = []
+                go ys i
+                        | length ys < lenSub = []
+                        | take lenSub ys == sub = i : go (tail ys) (i + 1)
+                        | otherwise = go (tail ys) (i + 1)
+
+strRotateMy :: [a] -> Int -> [a]
+strRotateMy [] _ = []
+strRotateMy xs n = rotateTimes xs m
+        where
+                len = length xs
+                m = mod n len
+
+                rotateTimes ys 0 = ys
+                rotateTimes ys k = rotateTimes (last ys : init ys) (k - 1)
+
+unevenHandWritingMy :: String -> String
+unevenHandWritingMy xs = go xs 1
+        where
+                go [] _ = []
+                go (c:cs) i
+                        | mod i 3 == 0 = swapCase c : go cs (i + 1)
+                        | otherwise = c : go cs (i + 1)
+
+                swapCase ch
+                        | isLower ch = toUpper ch
+                        | isUpper ch = toLower ch
+                        | otherwise = ch
