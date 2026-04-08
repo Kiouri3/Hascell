@@ -141,7 +141,6 @@ substrMy :: [a] -> Int -> Int -> [a]
 substrMy xs a b = take (b - a) (drop a xs)
 
 strReplaceMy :: Eq a => [a] -> [a] -> [a] -> [a]
-
 strReplaceMy old new xs
         | length old == 0 = xs
         | otherwise = replace xs
