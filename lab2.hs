@@ -27,12 +27,12 @@ intToDigitMy n
 
 -- Перевод из 16 в 10 с помощью алгоритма Горнера
 hexToDecMy :: String -> Integer
-hexToDecMy str = helper str 0
+hexToDecMy str = go str 0
   where
-    helper :: String -> Integer -> Integer
-    helper [] acc = acc
-    helper (c:cs) acc =
-        helper cs (acc * 16 + toInteger (digitToIntMy c))
+    go :: String -> Integer -> Integer
+    go [] acc = acc
+    go (c:cs) acc =
+        go cs (acc * 16 + toInteger (digitToIntMy c))
 
 -- перевод из 10-ричной в 16-ричную
 decToHexMy :: Integer -> String
@@ -100,18 +100,22 @@ unzipMy ((x, y):xs) = (x:as, y:bs)
   where
     (as, bs) = unzipMy xs
 
+-- Удаляет дубликаты из списка
 nubMy :: Eq a => [a] -> [a]
 nubMy [] = []
 nubMy (x:xs) = x : nubMy (filter (/= x) xs)
 
+-- Удаляет первое вхождение заданного элемента из списка
 deleteMy :: Eq a => a -> [a] -> [a]
 deleteMy a (x:xs)
   | a == x = xs
   | otherwise = x : deleteMy a xs
 
+-- объединяет два списка(как множества)
 unionMy :: Eq a => [a] -> [a] -> [a]
 unionMy xs ys = nubMy (xs ++ ys)
 
+-- Вычитает из первого списка второй(как множества)
 diffMy :: Eq a => [a] -> [a] -> [a]
 diffMy xs ys = go (nubMy xs) (nubMy ys)
   where
@@ -119,14 +123,16 @@ diffMy xs ys = go (nubMy xs) (nubMy ys)
     go xs [] = xs
     go xs (y:ys) = go (deleteMy y xs) ys
 
+-- Находит пересечение двух множеств
 intersectMy :: Eq a => [a] -> [a] -> [a]
-intersectMy xs ys = helper (nubMy xs) ys
+intersectMy xs ys = go (nubMy xs) ys
   where
-    helper [] _ = []
-    helper (x:xs') ys'
-      | x `elem` ys' = x : helper xs' ys'
-      | otherwise    = helper xs' ys'
+    go [] _ = []
+    go (x:xs') ys'
+      | x `elem` ys' = x : go xs' ys'
+      | otherwise    = go xs' ys'
 
+-- Строит булеан множества, то есть список всех подмножеств.
 powersetMy :: [a] -> [[a]]
 powersetMy [] = [[]]
 powersetMy (x:xs) =
@@ -134,47 +140,64 @@ powersetMy (x:xs) =
   where
     ps = powersetMy xs
 
+-- Добавляет элемент x в начало каждого подсписка.
 appendWithX :: a -> [[a]] -> [[a]]
 appendWithX _ [] = []
 appendWithX x (s:ss) =
     (x:s) : appendWithX x ss
-  
+-- Для каждого подмножества строит пару: само подмножество, его дополнение до исходного множества
 complementsMy :: Eq a => [a] -> [([a],[a])]
-complementsMy xs = helper (powersetMy setXs)
+complementsMy xs = go (powersetMy setXs)
   where
     setXs = nubMy xs
 
-    helper [] = []
-    helper (s:ss) = (s, diffMy setXs s) : helper ss
+    go [] = []
+    go (s:ss) = (s, diffMy setXs s) : go ss
 
+-- Вставляет элемент в уже отсортированный список
 insertMy :: Ord a => a -> [a] -> [a]
 insertMy x [] = [x]
 insertMy x (y:ys)
   | x <= y    = x : y : ys
   | otherwise = y : insertMy x ys
 
+-- Сортирует список по возрастанию
 sortMy :: Ord a => [a] -> [a]
 sortMy [] = []
 sortMy (x:xs) = insertMy x (sortMy xs)
 
+-- подсчитывает количество вхождений каждого символа в строку и выводит список кортежей, 
+-- отсортированный по убыванию второго элемента кортежа
 countCharsMy :: String -> [(Char, Int)]
-countCharsMy str = sortPairsDesc counts
+countCharsMy str = sortPairsDesc (makeCounts uniqueChars str)
   where
-    chars = nubMy str
-    counts = [(c, count c str) | c <- chars]
+    uniqueChars = nubMy str
 
-    count :: Char -> String -> Int
-    count ch = length . filter (== ch)
+-- Вспом.фукция, строит пару
+makeCounts :: String -> String -> [(Char, Int)]
+makeCounts [] _ = []
+makeCounts (c:cs) str =
+    (c, countChar c str) : makeCounts cs str
 
-    sortPairsDesc :: [(Char, Int)] -> [(Char, Int)]
-    sortPairsDesc [] = []
-    sortPairsDesc (x:xs) = insertPairDesc x (sortPairsDesc xs)
+-- Считает кол-во вхождений символа
+countChar :: Char -> String -> Int
+countChar _ [] = 0
+countChar c (x:xs)
+  | c == x    = 1 + countChar c xs
+  | otherwise = countChar c xs
 
-    insertPairDesc :: (Char, Int) -> [(Char, Int)] -> [(Char, Int)]
-    insertPairDesc p [] = [p]
-    insertPairDesc p@(c1,n1) (q@(c2,n2):qs)
-      | n1 >= n2  = p : q : qs
-      | otherwise = q : insertPairDesc p qs
+
+-- Сортирует список пар 
+sortPairsDesc :: [(Char, Int)] -> [(Char, Int)]
+sortPairsDesc [] = []
+sortPairsDesc (x:xs) = insertPairDesc x (sortPairsDesc xs)
+
+-- Вставляет одну пару в уже отсортированный список пар
+insertPairDesc :: (Char, Int) -> [(Char, Int)] -> [(Char, Int)]
+insertPairDesc p [] = [p]
+insertPairDesc p@(c1,n1) (q@(c2,n2):qs)
+  | n1 >= n2  = p : q : qs
+  | otherwise = q : insertPairDesc p qs
 
 -- show преобразует значение в строку.
 -- read читает значение из строки.
