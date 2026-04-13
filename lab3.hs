@@ -124,3 +124,78 @@ nthElementsMy xss n = map (!! n) xss
 
 reverseAllMy :: [[a]] -> [[a]]
 reverseAllMy xs = map reverse (reverse xs)
+
+mapIfMy :: (a -> Bool) -> (a -> b) -> (a -> b) -> [a] -> [b]
+mapIfMy _ _ _ [] = []
+mapIfMy cond f1 f2 (x:xs)
+  | cond x = f1 x : mapIfMy cond f1 f2 xs
+  | otherwise = f2 x : mapIfMy cond f1 f2 xs
+
+-- id возвращает само значение
+composeAllMy :: [a -> a] -> (a -> a)
+composeAllMy = foldr (\f g x -> f (g x)) id
+
+applyIterateMy :: [a -> a] -> a -> a
+applyIterateMy fs x = foldl (\acc f -> f acc) x fs
+
+partition :: (a -> Bool) -> [a] -> ([a], [a])
+partition _ [] = ([], [])
+partition cond (x:xs)
+  | cond x = (x:ts, fs)
+  | otherwise = (ts, x:fs)
+  where (ts, fs) = partition cond xs
+
+countTruePreds :: [a -> Bool] -> a -> Int
+countTruePreds ps x = length (filter (\p -> p x) ps)
+
+findIndices :: (a -> Bool) -> [a] -> [Int]
+findIndices p = go 0
+  where
+    go _ [] = []
+    go n (y:ys)
+      | p y = n : go (n + 1) ys
+      | otherwise = go (n + 1) ys
+
+sortByMy :: (a -> a -> Ordering) -> [a] -> [a]
+sortByMy _ [] = []
+sortByMy cmp (x:xs) = insertByMy cmp x (sortByMy cmp xs)
+
+-- Gt означает "больше"
+insertByMy :: (a -> a -> Ordering) -> a -> [a] -> [a]
+insertByMy _ x [] = [x]
+insertByMy cmp x (y:ys) =
+    if cmp x y == GT
+    then y : insertByMy cmp x ys
+    else x : y : ys
+
+onMy :: (b -> b -> c) -> (a -> b) -> a -> a -> c
+onMy fb fa x y = fb (fa x) (fa y)
+
+filterMapAndMy :: [a -> Bool] -> [a] -> [a]
+filterMapAndMy ps = filter (\x -> all (\p -> p x) ps)
+
+filterMapOrMy :: [a -> Bool] -> [a] -> [a]
+filterMapOrMy ps = filter (\x -> any (\p -> p x) ps)
+
+sumEqMy :: [[Int]] -> [Int]
+sumEqMy = foldr addCols []
+  where 
+    addCols [] ys = ys
+    addCols xs [] = xs
+    addCols (x:xs) (y:ys) = (x + y) : addCols xs ys
+
+mapAccumLMy :: (acc -> x -> (acc, y)) -> acc -> [x] -> (acc, [y])
+mapAccumLMy _ acc [] = (acc, [])
+mapAccumLMy f acc (x:xs) = combine (f acc x)
+  where
+    combine (acc1, y) = finish (mapAccumLMy f acc1 xs) y
+    finish (acc2, ys) y = (acc2, y:ys)
+
+segregateFMy :: [a -> Bool] -> a -> ([a -> Bool], [a -> Bool])
+segregateFMy [] _ = ([], [])
+segregateFMy (f:fs) x = add f (segregateFMy fs x)
+  where
+    add f (ts, fs') =
+        if f x
+        then (f:ts, fs')
+        else (ts, f:fs')
