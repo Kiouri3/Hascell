@@ -198,3 +198,34 @@ infixesMy xs =
     prefixesOfLen n (y:ys)
         | length y < n = prefixesOfLen n ys
         | otherwise = take n y : prefixesOfLen n ys
+
+-- проверяет, является ли одна строка префиксом другой
+isPrefixOfMy :: Eq a => [a] -> [a] -> Bool
+isPrefixOfMy xs ys = xs `elem` initsMy ys
+
+-- проверяет, является ли одна строка суффиксом другой
+isSuffixOfMy :: Eq a => [a] -> [a] -> Bool
+isSuffixOfMy xs ys = xs `elem` tailMy ys
+
+-- проверяет, является ли одна строка инфиниксом другой
+isInfixOfMy :: Eq a => [a] -> [a] -> Bool
+isInfixOfMy xs ys = xs `elem` infixesMy ys
+
+-- вычисляет кумулятивные суммы всех постфиксов списка
+-- Убираем посл. элемент с помощью init, т.к. в конце 0
+cumSumPostfixMy :: Num a => [a] -> [a]
+cumSumPostfixMy = init . scanr (+) 0
+
+-- вычисляет кумулятивные суммы всех префиксов списка
+cumSumPrefixMy :: Num a => [a] -> [a]
+cumSumPrefixMy = tail . scanl (+) 0
+
+-- вычисляет разницы между парами подряд идущих чисел
+diffMy :: [Int] -> [Int]
+diffMy xs = zipWith (-) (tail xs) xs
+
+-- находит для каждого числа списка, сколько чисел имеется строго меньше него
+countLessMy :: [Int] -> [Int]
+countLessMy xs = map go xs
+    where
+        go x = length(filter (<x) xs)
