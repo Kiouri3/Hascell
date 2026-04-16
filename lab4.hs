@@ -67,6 +67,7 @@ thousandthDigit = naturalDigits !! 999
 
 -- Скобки
 
+-- Проверяют: соответствуют ли две скобки друг другу
 matchingBracket :: Char -> Char -> Bool
 matchingBracket '(' ')' = True
 matchingBracket '[' ']' = True
@@ -79,20 +80,22 @@ isOpenBracket c = c `elem` "([{"
 isCloseBracket :: Char -> Bool
 isCloseBracket c = c `elem` ")]}"
 
+-- Удаляет все кроме скобок и использует алгоритм
+-- с использованием стека
 checkBrackets :: String -> Bool
 checkBrackets =
     null . foldl step [] . filter (\c -> isOpenBracket c || isCloseBracket c)
   where
     step [] c
         | isOpenBracket c = [c]
-        | otherwise = ['#']
+        | otherwise = ['#']     -- # - код ошибки
     step st c
         | st == ['#'] = ['#']
         | isOpenBracket c = c : st
         | isCloseBracket c =
             case st of
                 (x:xs)
-                    | matchingBracket x c -> xs
+                    | matchingBracket x c -> xs  -- Если скобки сошлись - удаляем открывающую скобку
                     | otherwise -> ['#']
                 [] -> ['#']
         | otherwise = st
@@ -106,8 +109,13 @@ checkBracketsFile input = do
            else "incorrect"
 
 
--- Слова: (слово:число), по убыванию числа
+-- Читает файл, считает слова и записывает результат
+wordCountFile :: FilePath -> FilePath -> IO ()
+wordCountFile input output = do
+    content <- readFile input
+    writeFile output (renderPairs (wordCountPairs content))
 
+-- Слова: (слово:число), по убыванию числа
 wordCountPairs :: String -> [(String, Int)]
 wordCountPairs =
     sortBy (\(_, a) (_, b) -> compare b a) .
@@ -116,19 +124,21 @@ wordCountPairs =
     sort .
     wordsNormalized
 
-wordCountFile :: FilePath -> FilePath -> IO ()
-wordCountFile input output = do
-    content <- readFile input
-    writeFile output (renderPairs (wordCountPairs content))
-
+-- удаляет всё кроме букв и цифр
+-- переводит в нижний регистр
 normalizeWord :: String -> String
 normalizeWord =
     map toLower . filter isAlphaNum
 
+-- разбивает текст на слова
+-- приводит к нижнему регистру
+-- убирает лишние символы
 wordsNormalized :: String -> [String]
 wordsNormalized =
     filter (not . null) . map normalizeWord . words
 
+
+-- Преобразует пары в текст
 renderPairs :: [(String, Int)] -> String
 renderPairs =
     unlines . map (\(w, n) -> w ++ ":" ++ show n)
@@ -147,6 +157,12 @@ explodeMy a = foldr step [[]]
       | x == a = [] : y : ys
       | otherwise = (x : y) : ys
 
+-- разбивает заданный список элементов по заданному условию на кортежи из двух подсписков подряд идущих элементов.
+-- В каждом кортеже в первом подсписке содержатся подряд идущие элементы, 
+-- на которых условие возвращает True, а во втором – False.
+
+-- span берёт элементы с начала списка,
+-- пока условие True возвращает: (подходящие, остаток)
 explodeByMy :: (a -> Bool) -> [a] -> [([a], [a])]
 explodeByMy _ [] = []
 explodeByMy p xs =
@@ -154,8 +170,7 @@ explodeByMy p xs =
         (_, []) -> []
         (as, rest) ->
             case span p rest of
-                (bs, cs) ->
-                    (as, bs) : explodeByMy p cs
+                (bs, cs) -> (as, bs) : explodeByMy p cs
 
 -- группирует подряд идущие одинаковые элементы в отдельный подсписок
 groupMy :: Eq a => [a] -> [[a]]
@@ -180,9 +195,11 @@ groupByMy f = foldr step [[]]
 initsMy :: [a] -> [[a]]
 initsMy = scanl (\acc x -> acc ++ [x]) []
 
+-- находящит все суффиксы заданного списка
 tailMy :: [a] -> [[a]]
 tailMy = scanr (:) []
 
+-- находит все непрерывные подсписки заданного списка
 infixesMy :: [a] -> [[a]]
 infixesMy xs =
     [] : go 1
