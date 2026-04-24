@@ -11,7 +11,7 @@ factorizeMy a = go a primesMy
   where
     go 1 _ = []
     go x (p:ps)
-      | p * p > x = [1]
+      | p > x = [1]
       | otherwise = c : go rest ps
       where
         (rest, c) = count x p 0
